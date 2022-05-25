@@ -22,6 +22,9 @@ function [vel_command, collisions] = compute_vel_vasarhelyi_no_front(self, p_swa
     %
     
     
+    %% Reset randomness.
+    reset(RandStream.getGlobalStream,sum(100*clock));
+
     %% Initialize variables
 
     pos = self.get_pos_ned();
@@ -194,8 +197,27 @@ function [vel_command, collisions] = compute_vel_vasarhelyi_no_front(self, p_swa
 
                 % If agent 1, make front facing sensor faulty.
                 dist_ab_collision_detect = dist_ab;
+                front_sensor_failure_chance = self.front_sensor_failure_chance;
+                front_sensor_failure_scale = self.front_sensor_failure_scale;
+%                 if ~isinteger(front_sensor_failure_scale)
+%                     front_sensor_failure_scale = 0;
+%                 end
                 if agent == 1
-                    dist_ab = dist_ab + 100;
+                    failure_percentage = 1;
+%                     failure_scale = 1;
+                    if self.swarm_defect == "no_front_random"
+                        failure_percentage = rand();
+                    end
+                    if self.swarm_defect == "no_front_random_scale"
+%                         failure_scale = rand();
+                    end
+                    if self.swarm_defect == "no_front_random_and_scale"
+                        failure_percentage = rand();
+%                         failure_scale = rand();
+                    end
+                    if (failure_percentage >= (1 - front_sensor_failure_chance)) %& (failure_scale >= (1 - front_sensor_failure_scale))
+                        dist_ab = dist_ab + (100 * front_sensor_failure_scale);
+                    end
                 end
 
                 nb_obs_collisions = nb_obs_collisions + sum(dist_ab_collision_detect < r_agent);

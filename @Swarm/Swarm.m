@@ -21,6 +21,8 @@ classdef Swarm < handle
                          % of the swarm for command computations
         algorithm SwarmAlgorithm
         swarm_defect
+        front_sensor_failure_chance
+        front_sensor_failure_scale
         collisions_history
     end
     
@@ -203,18 +205,19 @@ classdef Swarm < handle
 
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function [vel_commands, collisions] = update_command(self, p_swarm, r_coll, dt)
-
             % Select the swarm algorithm and call the associated update
             if self.algorithm == "vasarhelyi"
                 if self.swarm_defect == "regular"
                     [vel_commands, collisions] = self.compute_vel_vasarhelyi(p_swarm, r_coll, dt);
-                elseif self.swarm_defect == "no_front_no_bounce"
-                    [vel_commands, collisions] = self.compute_vel_vasarhelyi_no_front(p_swarm, r_coll, dt);
                 else
-                    [vel_commands, collisions] = self.compute_vel_vasarhelyi(p_swarm, r_coll, dt);
+                    [vel_commands, collisions] = self.compute_vel_vasarhelyi_no_front(p_swarm, r_coll, dt);
                 end
             elseif self.algorithm == "olfati_saber"
-                [vel_commands, collisions] = self.compute_vel_olfati_saber(p_swarm, r_coll, dt);
+                if self.swarm_defect == "regular"
+                    [vel_commands, collisions] = self.compute_vel_olfati_saber(p_swarm, r_coll, dt);
+                else
+                    [vel_commands, collisions] = self.compute_vel_olfati_saber_no_front(p_swarm, r_coll, dt);
+                end
             end
             if isempty(self.collisions_history)
                 self.collisions_history = collisions;
